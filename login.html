@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Form</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel=" info " href="info" />
+  </head>
+  <body>
+    <div class="auth-wrapper">
+      <div class="auth-card" role="region" aria-label="Authentication form">
+        <div class="auth-tabs">
+          <button id="tab-login" class="active" aria-controls="login-form">
+            Login
+          </button>
+          <button id="tab-signup" aria-controls="signup-form">Sign Up</button>
+        </div>
+
+        <form id="login-form" class="auth-form" autocomplete="on">
+          <label for="login-email">Email</label>
+          <input
+            id="login-email"
+            name="email"
+            type="email"
+            required
+            placeholder="you@example.com"
+          />
+
+          <label for="login-password">Password</label>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            required
+            placeholder="Enter your password"
+          />
+
+          <div class="form-row">
+            <label class="checkbox-inline"
+              ><input type="checkbox" id="remember" /> Remember me</label
+            >
+            <a href="#" class="forgot">Forgot?</a>
+          </div>
+
+          <button type="submit" class="btn-primary">Log in</button>
+        </form>
+
+        <form id="signup-form" class="auth-form hidden" autocomplete="on">
+          <label for="signup-name">Full name</label>
+          <input
+            id="signup-name"
+            name="name"
+            type="text"
+            required
+            placeholder="Your full name"
+          />
+
+          <label for="signup-email">Email</label>
+          <input
+            id="signup-email"
+            name="email"
+            type="email"
+            required
+            placeholder="you@example.com"
+          />
+
+          <label for="signup-password">Password</label>
+          <input
+            id="signup-password"
+            name="password"
+            type="password"
+            required
+            placeholder="Create a password"
+          />
+
+          <label for="signup-password2">Confirm password</label>
+          <input
+            id="signup-password2"
+            name="password2"
+            type="password"
+            required
+            placeholder="Repeat your password"
+          />
+
+          <label class="checkbox-inline"
+            ><input id="accept-terms" type="checkbox" required /> I agree to the
+            Terms</label
+          >
+
+          <button type="submit" class="btn-primary">Create account</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Tab switching
+      const tabLogin = document.getElementById("tab-login");
+      const tabSignup = document.getElementById("tab-signup");
+      const loginForm = document.getElementById("login-form");
+      const signupForm = document.getElementById("signup-form");
+
+      function showLogin() {
+        tabLogin.classList.add("active");
+        tabSignup.classList.remove("active");
+        loginForm.classList.remove("hidden");
+        signupForm.classList.add("hidden");
+      }
+
+      function showSignup() {
+        tabSignup.classList.add("active");
+        tabLogin.classList.remove("active");
+        signupForm.classList.remove("hidden");
+        loginForm.classList.add("hidden");
+      }
+
+      tabLogin.addEventListener("click", showLogin);
+      tabSignup.addEventListener("click", showSignup);
+
+      // Show feedback message to user
+      function showMessage(message, isError = false) {
+        const messageDiv = document.createElement("div");
+        messageDiv.textContent = message;
+        messageDiv.style.padding = "10px";
+        messageDiv.style.margin = "10px 0";
+        messageDiv.style.borderRadius = "4px";
+        messageDiv.style.backgroundColor = isError ? "#ffe6e6" : "#e6ffe6";
+        messageDiv.style.color = isError ? "#cc0000" : "#006600";
+
+        const form = document.querySelector(".auth-form:not(.hidden)");
+        form.insertBefore(messageDiv, form.firstChild);
+
+        setTimeout(() => messageDiv.remove(), 5000);
+      }
+
+      // Save user data to localStorage and display formatted info
+      function saveUserData(userData) {
+        try {
+          // Save to localStorage
+          const users = JSON.parse(localStorage.getItem("users") || "[]");
+          users.push(userData);
+          localStorage.setItem("users", JSON.stringify(users));
+
+          // Format data as per info file format
+          const formattedData = `${userData.name} | ${userData.email} | ${userData.password} | ${userData.dateCreated}`;
+
+          // Show the formatted data that should be added to info file
+          console.log("New user registration:");
+          console.log("Please add this line to your info file:");
+          console.log(formattedData);
+
+          return true;
+        } catch (error) {
+          console.error("Error saving user data:", error);
+          return false;
+        }
+      }
+
+      // Validate email format
+      function isValidEmail(email) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPattern.test(email);
+      }
+
+      // Validate password strength
+      function isValidPassword(password) {
+        return password.length >= 8;
+      }
+
+      // Basic client-side validation for signup
+      signupForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("signup-name").value.trim();
+        const email = document.getElementById("signup-email").value.trim();
+        const password = document.getElementById("signup-password").value;
+        const password2 = document.getElementById("signup-password2").value;
+        const acceptTerms = document.getElementById("accept-terms").checked;
+
+        // Validation checks
+        if (!name) {
+          showMessage("Please enter your full name", true);
+          return;
+        }
+
+        if (!isValidEmail(email)) {
+          showMessage("Please enter a valid email address", true);
+          return;
+        }
+
+        if (!isValidPassword(password)) {
+          showMessage("Password must be at least 8 characters long", true);
+          return;
+        }
+
+        if (password !== password2) {
+          showMessage("Passwords do not match", true);
+          return;
+        }
+
+        if (!acceptTerms) {
+          showMessage("Please accept the terms to continue", true);
+          return;
+        }
+
+        // Save user data
+        const userData = {
+          name,
+          email,
+          password,
+          dateCreated: new Date().toISOString(),
+        };
+
+        const saved = await saveUserData(userData);
+
+        if (saved) {
+          showMessage("Account created successfully!");
+          signupForm.reset();
+          showLogin();
+        } else {
+          showMessage("Failed to create account. Please try again.", true);
+        }
+      });
+
+      // Handle login
+      loginForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+
+        if (!isValidEmail(email)) {
+          showMessage("Please enter a valid email address", true);
+          return;
+        }
+
+        if (!password) {
+          showMessage("Please enter your password", true);
+          return;
+        }
+
+        // Check credentials against localStorage
+        const users = JSON.parse(localStorage.getItem("users") || "[]");
+        const user = users.find(
+          (u) => u.email === email && u.password === password
+        );
+
+        if (user) {
+          showMessage("Login successful!");
+          localStorage.setItem(
+            "currentUser",
+            JSON.stringify({
+              name: user.name,
+              email: user.email,
+            })
+          );
+        } else {
+          showMessage("Invalid email or password", true);
+        }
+      });
+    </script>
+  </body>
+</html>
